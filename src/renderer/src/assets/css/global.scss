@@ -6,3 +6,17 @@
 .no-drag {
   -webkit-app-region: no-drag;
 }
+
+::-webkit-scrollbar{
+  @apply w-[6px] h-[6px]
+}
+
+::-webkit-scrollbar-thumb{
+  @apply bg-slate-900 rounded
+}
+::-webkit-scrollbar-corner{
+  @apply bg-transparent
+}
+::-webkit-scrollbar-track{
+  @apply bg-transparent
+}

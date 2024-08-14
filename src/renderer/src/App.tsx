@@ -4,7 +4,6 @@ import { Search } from './components/Search'
 
 function App(): JSX.Element {
   const [searchText, setSearchText] = useState('')
-
   return (
     <div className="drag rounded-lg overflow-hidden">
       <Search searchText={searchText} setSearchText={setSearchText} />

@@ -3,7 +3,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
-  getDefaultBrowserIcon: () => ipcRenderer.invoke('get-default-browser-icon')
+  getDefaultBrowserIcon: () => ipcRenderer.invoke('get-default-browser-icon'),
+  searchAppsAndFiles: (searchTerm: string) => ipcRenderer.invoke('search-apps-and-files', searchTerm)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

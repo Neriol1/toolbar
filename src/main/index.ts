@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { execSync } from 'child_process'
+import { searchAppsAndFiles, getInstalledApps  } from './search'
 
 function createWindow(): void {
   // Create the browser window.
@@ -46,7 +47,9 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-
+  if (process.platform === 'win32') {
+    getInstalledApps()
+  }
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -88,13 +91,21 @@ ipcMain.handle('get-default-browser-icon', async () => {
     let browserPath = ''
     if (process.platform === 'win32') {
       // 在 Windows 上使用注册表获取默认浏览器路径
-      const output = execSync('reg query HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice /v ProgId').toString()
+      const output = execSync(
+        'reg query HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice /v ProgId'
+      ).toString()
       const progId = output.match(/ProgId\s+REG_SZ\s+(.*)/)![1].trim()
-      const command = execSync(`reg query HKEY_CLASSES_ROOT\\${progId}\\shell\\open\\command /ve`).toString()
+      const command = execSync(
+        `reg query HKEY_CLASSES_ROOT\\${progId}\\shell\\open\\command /ve`
+      ).toString()
       browserPath = command.match(/REG_SZ\s+(".*?"|[^"\s]+)/)![1].replace(/"/g, '')
     } else if (process.platform === 'darwin') {
       // 在 macOS 上获取默认浏览器路径
-      browserPath = execSync('defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers | grep "LSHandlerRoleAll = http;" -A 2 | grep LSHandlerURLScheme | awk -F\'"\' \'{print $4}\'').toString().trim()
+      browserPath = execSync(
+        "defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers | grep \"LSHandlerRoleAll = http;\" -A 2 | grep LSHandlerURLScheme | awk -F'\"' '{print $4}'"
+      )
+        .toString()
+        .trim()
     } else {
       // 在 Linux 上，可能需要其他方法
       console.log('暂不支持 Linux 系统获取默认浏览器图标')
@@ -112,4 +123,9 @@ ipcMain.handle('get-default-browser-icon', async () => {
     console.error('获取默认浏览器图标失败:', error)
     return null
   }
+})
+
+// 添加 search
+ipcMain.handle('search-apps-and-files', async (_, searchTerm) => {
+  return await searchAppsAndFiles(searchTerm)
 })
