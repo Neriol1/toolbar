@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useRef, useEffect } from 'react'
 import { ContentItem } from './ContentItem'
-import { debounce } from 'lodash-es'
 
 interface ContentProps {
-  searchText: string
+  searchResults: SearchResult[]
+  selectedIndex: number
+  setSelectedIndex: (index: number) => void
+  executeSelectedAction: () => void
 }
 
 interface SearchResult {
@@ -11,48 +13,47 @@ interface SearchResult {
   title: string
   content?: string
   icon?: string
+  action: string
 }
 
-export const Content = ({ searchText }: ContentProps) => {
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
-
-  const debouncedSearch = useCallback(
-    debounce(async (term: string) => {
-      if (term.trim() !== '') {
-        const results = await window.api.searchAppsAndFiles(term.trim())
-        setSearchResults(results)
-      } else {
-        setSearchResults([])
-      }
-    }, 300),
-    []
-  )
+export const Content = ({ searchResults, selectedIndex, setSelectedIndex, executeSelectedAction }: ContentProps) => {
+  const contentRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    debouncedSearch(searchText)
+    if (contentRef.current && itemRefs.current[selectedIndex]) {
+      const container = contentRef.current
+      const selectedItem = itemRefs.current[selectedIndex]
 
-    // 清理函数
-    return () => {
-      debouncedSearch.cancel()
+      const containerRect = container.getBoundingClientRect()
+      const selectedItemRect = selectedItem.getBoundingClientRect()
+
+      if (selectedItemRect.bottom > containerRect.bottom) {
+        container.scrollTop += selectedItemRect.bottom - containerRect.bottom
+      } else if (selectedItemRect.top < containerRect.top) {
+        container.scrollTop -= containerRect.top - selectedItemRect.top
+      }
     }
-  }, [searchText, debouncedSearch])
+  }, [selectedIndex])
 
   return (
-    <main className="p-3 bg-gray-200 max-h-80 overflow-y-scroll overflow-x-clip">
+    <main ref={contentRef} className="p-3 bg-gray-200 max-h-80 overflow-y-scroll overflow-x-clip">
       {searchResults.map((result, index) => (
-        <ContentItem
+        <div
           key={index}
-          title={result.title}
-          content={result.type === 'file' ? result.content : 'Application'}
-          icon={result.icon}
-          onClick={() => {
-            if (result.type === 'app') {
-              // 打开应用
-            } else if (result.type === 'file') {
-              window.api.openExternal(`file://${result.content}`)
-            }
-          }}
-        />
+          ref={(el) => (itemRefs.current[index] = el)}
+        >
+          <ContentItem
+            title={result.title}
+            content={result.type === 'file' ? result.content : 'Application'}
+            icon={result.icon}
+            isSelected={index === selectedIndex}
+            onClick={() => {
+              setSelectedIndex(index)
+              executeSelectedAction()
+            }}
+          />
+        </div>
       ))}
     </main>
   )
