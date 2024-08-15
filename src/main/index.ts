@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { execSync } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { searchAppsAndFiles, getInstalledApps  } from './search'
 
 function createWindow(): void {
@@ -128,4 +128,13 @@ ipcMain.handle('get-default-browser-icon', async () => {
 // 添加 search
 ipcMain.handle('search-apps-and-files', async (_, searchTerm) => {
   return await searchAppsAndFiles(searchTerm)
+})
+
+
+const execAction = async (command: string) => {
+  return exec(command)
+}
+
+ipcMain.handle('exec-action', (_, command) => {
+  execAction(command)
 })

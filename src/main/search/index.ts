@@ -8,6 +8,7 @@ type SearchResult = {
   title: string
   icon?: string
   content?: string
+  action: string
 }
 
 const searchApps = (searchTerm: string): SearchResult[] => {
@@ -25,7 +26,8 @@ const searchApps = (searchTerm: string): SearchResult[] => {
         type: 'app',
         title: v.name,
         icon: v.icon,
-        content: v.desc
+        content: v.desc,
+        action:v.action
       })) as SearchResult[])
     )
   } else if (process.platform === 'darwin') {
@@ -64,7 +66,8 @@ const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
       type: 'file',
       title: file,
       icon: icon || undefined,
-      content: pathName
+      content: pathName,
+      action: ''
     }
   }))
 }
