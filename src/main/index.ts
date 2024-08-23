@@ -82,8 +82,8 @@ app.on('window-all-closed', () => {
 // code. You can also put them in separate files and require them here.
 
 // Handle IPC requests from renderer
-ipcMain.handle('open-external', async (_, url) => {
-  return shell.openExternal(url)
+ipcMain.handle('open-path', async (_, url) => {
+  return shell.openPath(url)
 })
 
 ipcMain.handle('get-default-browser-icon', async () => {

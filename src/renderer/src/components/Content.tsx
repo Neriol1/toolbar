@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { ContentItem } from './ContentItem'
 
 interface ContentProps {
@@ -8,23 +8,19 @@ interface ContentProps {
   executeSelectedAction: () => void
 }
 
-interface SearchResult {
-  type: 'app' | 'file'
-  title: string
-  content?: string
-  icon?: string
-  action: string
-}
-
-export const Content = ({ searchResults, selectedIndex, setSelectedIndex, executeSelectedAction }: ContentProps) => {
+export const Content = ({
+  searchResults,
+  selectedIndex,
+  setSelectedIndex,
+  executeSelectedAction
+}: ContentProps) => {
   const contentRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  useEffect(() => {
-    if (contentRef.current && itemRefs.current[selectedIndex]) {
-      const container = contentRef.current
-      const selectedItem = itemRefs.current[selectedIndex]
-
+  const scrollToSelectedItem = useCallback(() => {
+    const container = contentRef.current
+    const selectedItem = itemRefs.current[selectedIndex]
+    if (container && selectedItem) {
       const containerRect = container.getBoundingClientRect()
       const selectedItemRect = selectedItem.getBoundingClientRect()
 
@@ -36,24 +32,23 @@ export const Content = ({ searchResults, selectedIndex, setSelectedIndex, execut
     }
   }, [selectedIndex])
 
+  useEffect(() => {
+    scrollToSelectedItem()
+  }, [scrollToSelectedItem])
+
   return (
-    <main ref={contentRef} className="p-3 bg-gray-200 max-h-80 overflow-y-scroll overflow-x-clip">
+    <main ref={contentRef} className="p-3 bg-gray-200 max-h-80 overflow-y-auto overflow-x-clip">
       {searchResults.map((result, index) => (
-        <div
+        <ContentItem
           key={index}
           ref={(el) => (itemRefs.current[index] = el)}
-        >
-          <ContentItem
-            title={result.title}
-            content={result.type === 'file' ? result.content : 'Application'}
-            icon={result.icon}
-            isSelected={index === selectedIndex}
-            onClick={() => {
-              setSelectedIndex(index)
-              executeSelectedAction()
-            }}
-          />
-        </div>
+          {...result}
+          isSelected={index === selectedIndex}
+          onClick={() => {
+            setSelectedIndex(index)
+            executeSelectedAction()
+          }}
+        />
       ))}
     </main>
   )

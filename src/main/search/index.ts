@@ -49,25 +49,27 @@ const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
   const directories = [
     'home', 'desktop', 'downloads', 'userData', 'documents'
   ].map(dir => app.getPath(dir as any))
+  const allFiles = directories.reduce((pre,cur)=>{
+    const p = fs.readdirSync(cur)
+    return pre.concat(p.map(v=>({filename:v,path:path.join(cur,v)})))
+  }, [] as {filename:string,path:string}[])
 
-  const allFiles = directories.flatMap(dir => fs.readdirSync(dir))
-  const filterFiles = allFiles.filter(file => file.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filterFiles = allFiles.filter(file => file.filename.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return Promise.all(filterFiles.map(async file => {
-    const pathName = path.join(app.getPath('documents'), file)
     let icon = ''
     try {
-      const iconObj = await app.getFileIcon(pathName)
+      const iconObj = await app.getFileIcon(file.path)
       icon = iconObj.toDataURL()
     } catch (error) {
       console.error(`获取文件图标失败: ${file}`, error)
     }
     return {
       type: 'file',
-      title: file,
+      title: file.filename,
       icon: icon || undefined,
-      content: pathName,
-      action: ''
+      content: file.path,
+      action: file.path
     }
   }))
 }
