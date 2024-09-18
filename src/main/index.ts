@@ -47,9 +47,7 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-  if (process.platform === 'win32') {
     getInstalledApps()
-  }
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -83,7 +81,7 @@ app.on('window-all-closed', () => {
 
 // Handle IPC requests from renderer
 ipcMain.handle('open-path', async (_, url) => {
-  return shell.openPath(url)
+  return shell.openExternal(url)
 })
 
 ipcMain.handle('get-default-browser-icon', async () => {

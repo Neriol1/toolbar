@@ -1,7 +1,8 @@
 import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import { installedApps, getInstalledApps } from './win'
+import { FileListItem, getInstalledApps as getWinInstalledApps } from './win'
+import getMacApp, { MacAppType } from './get-mac-app'
 
 type SearchResult = {
   type: 'app' | 'file'
@@ -11,11 +12,22 @@ type SearchResult = {
   action: string
 }
 
+let installedApps: FileListItem[] | MacAppType[] = []
+
+export const getInstalledApps = async ()=>{
+  if(process.platform === 'win32'){
+    installedApps = getWinInstalledApps()
+  }else{
+    installedApps = await getMacApp.getApps() as MacAppType[]
+  }
+}
+
 const searchApps = (searchTerm: string): SearchResult[] => {
   const results: SearchResult[] = []
+  const v = searchTerm.toLowerCase()
   if (process.platform === 'win32') {
-    const v = searchTerm.toLowerCase()
-    const apps = installedApps.filter((app) => {
+    const list = installedApps as FileListItem[]
+    const apps = list.filter((app) => {
       return (
         app.names.some((name) => name.toLowerCase().includes(v)) ||
         app.name.toLowerCase().includes(v)
@@ -32,18 +44,30 @@ const searchApps = (searchTerm: string): SearchResult[] => {
     )
   } else if (process.platform === 'darwin') {
     // macOS 搜索应用的示例代码
-    // const output = execSync(`mdfind -name '${searchTerm}' -onlyin /Applications`).toString()
-    // const apps = output.split('\n').filter(Boolean).slice(0, 5)
-    // for (const appPath of apps) {
-    //   results.push({
-    //     type: 'app',
-    //     title: path.basename(appPath, '.app'),
-    //     icon: appPath
-    //   })
-    // }
+    const list = installedApps as MacAppType[]
+    console.log(list);
+    
+    const apps = list.filter((app) => {
+      return (
+        app._name.toLowerCase().includes(v)
+      )
+    })
+    
+    console.log(apps,'---apps');
+    results.push(
+      ...(apps.map((v) => ({
+        type: 'app',
+        title: v._name,
+        icon: v.icon,
+        content: v.obtained_from === 'unknown' ? v.path : '',
+        action:v.path
+      })) as SearchResult[])
+    )
   }
   return results
 }
+
+
 
 const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
   const directories = [
@@ -76,6 +100,8 @@ const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
 
 export const searchAppsAndFiles = async (searchTerm: string) => {
   console.log(`开始搜索: ${searchTerm}`)
+  console.log(installedApps,'--installedApps');
+  
   const [appResults, fileResults] = await Promise.all([
     searchApps(searchTerm),
     searchFiles(searchTerm)
@@ -84,5 +110,3 @@ export const searchAppsAndFiles = async (searchTerm: string) => {
   console.log(`搜索完成，找到 ${results.length} 个结果`)
   return results
 }
-
-export { getInstalledApps }

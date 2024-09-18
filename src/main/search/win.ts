@@ -3,7 +3,7 @@ import path from 'path'
 import os from 'os'
 import { app, shell } from 'electron'
 
-type FileListItem = {
+export type FileListItem = {
   desc: string
   type: 'app' | 'file'
   icon: string
@@ -28,7 +28,7 @@ if (!exists) {
   fs.mkdirSync(icondir)
 }
 
-export function fileDisplay(filePath: string) {
+export function fileDisplay(filePath: string,result:FileListItem[]) {
   //根据文件路径读取文件，返回文件列表
   fs.readdir(filePath, function (err, files) {
     if (err) {
@@ -85,10 +85,10 @@ export function fileDisplay(filePath: string) {
                 names: JSON.parse(JSON.stringify(keyWords))
               } as FileListItem
 
-              installedApps.push(appInfo)
+              result.push(appInfo)
             }
             if (isDir) {
-              fileDisplay(filedir) // 递归，如果是文件夹，就继续遍历该文件夹下面的文件
+              fileDisplay(filedir,result) // 递归，如果是文件夹，就继续遍历该文件夹下面的文件
             }
           }
         })
@@ -98,9 +98,10 @@ export function fileDisplay(filePath: string) {
 }
 
 const getInstalledApps = () => {
-  fileDisplay(filePath)
-  fileDisplay(startMenu)
-  return installedApps
+  const result: FileListItem[] = []
+  fileDisplay(filePath,result)
+  fileDisplay(startMenu,result)
+  return result
 }
 
-export { installedApps, getInstalledApps }
+export { getInstalledApps }
