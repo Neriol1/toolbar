@@ -8,11 +8,10 @@ import * as icns from 'icns-lib'
 const plist = require('simple-plist')
 // const fileIcon = require('file-icon');
 
-export const getIconFile = (appFileInput): Promise<string> => {
+export const getIconFile = (fileIconToBuffer,appFileInput): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     // const plistPath = path.join(appFileInput, 'Contents', 'Info.plist');
     try {
-      const { fileIconToBuffer } = await import('file-icon') // 动态导入
       const buffer4 = await fileIconToBuffer(appFileInput)
       resolve(`data:image/png;base64,${buffer4.toString('base64')}`)
     } catch (error) {

@@ -1,7 +1,8 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface Api {
-  openPath: (url: string) => Promise<void>;
+  openByPath: (url: string) => Promise<void>;
+  searchOnBrowser: (url: string) => Promise<void>;
   getDefaultBrowserIcon: () => Promise<string | null>;
   searchAppsAndFiles:(searchTerm: string) => Promise<SearchResult[]>;
   execAction: (command: string) => void;

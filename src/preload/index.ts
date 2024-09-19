@@ -2,7 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
-  openPath: (url: string) => ipcRenderer.invoke('open-path', url),
+  openByPath: (url: string) => ipcRenderer.invoke('open-by-path', url),
+  searchOnBrowser: (url: string) => ipcRenderer.invoke('search-on-browser', url),
   getDefaultBrowserIcon: () => ipcRenderer.invoke('get-default-browser-icon'),
   searchAppsAndFiles: (searchTerm: string) => ipcRenderer.invoke('search-apps-and-files', searchTerm),
   execAction: (command: string) => ipcRenderer.invoke('exec-action', command)

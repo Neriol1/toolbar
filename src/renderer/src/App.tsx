@@ -36,9 +36,17 @@ function App(): JSX.Element {
   const executeSelectedAction = useCallback(() => {
     const selectedResult = searchResults[selectedIndex]
     if (selectedResult) {
-      selectedResult.type === 'app'
-        ? window.api.execAction(selectedResult.action)
-        : window.api.openPath(selectedResult.action)
+      switch (selectedResult.type) {
+        case 'app':
+          window.api.execAction(selectedResult.action)
+          break;
+        case 'file':
+          window.api.openByPath(selectedResult.action)
+          break;
+        case 'search':
+          window.api.searchOnBrowser(selectedResult.action)
+          break;
+      }
     }
   }, [searchResults, selectedIndex])
 

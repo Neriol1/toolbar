@@ -2,7 +2,7 @@ import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { FileListItem, getInstalledApps as getWinInstalledApps } from './win'
-import getMacApp, { MacAppType } from './get-mac-app'
+import getMacApp, { MacAppType } from './drawin'
 
 type SearchResult = {
   type: 'app' | 'file'
@@ -43,24 +43,19 @@ const searchApps = (searchTerm: string): SearchResult[] => {
       })) as SearchResult[])
     )
   } else if (process.platform === 'darwin') {
-    // macOS 搜索应用的示例代码
     const list = installedApps as MacAppType[]
-    console.log(list);
-    
     const apps = list.filter((app) => {
       return (
         app._name.toLowerCase().includes(v)
       )
     })
-    
-    console.log(apps,'---apps');
     results.push(
       ...(apps.map((v) => ({
         type: 'app',
         title: v._name,
         icon: v.icon,
         content: v.obtained_from === 'unknown' ? v.path : '',
-        action:v.path
+        action:`open -a ${v.path}`
       })) as SearchResult[])
     )
   }
