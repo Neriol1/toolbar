@@ -2,7 +2,7 @@ import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { FileListItem, getInstalledApps as getWinInstalledApps } from './win'
-import getMacApp, { MacAppType } from './drawin'
+import  { MacAppType, getInstalledApps as getMacInstalledApps } from './drawin'
 
 type SearchResult = {
   type: 'app' | 'file'
@@ -18,7 +18,7 @@ export const getInstalledApps = async ()=>{
   if(process.platform === 'win32'){
     installedApps = getWinInstalledApps()
   }else{
-    installedApps = await getMacApp.getApps() as MacAppType[]
+    installedApps =  await getMacInstalledApps() as MacAppType[]
   }
 }
 
