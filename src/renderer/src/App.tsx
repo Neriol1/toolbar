@@ -3,6 +3,8 @@ import { Content } from './components/Content'
 import { Search } from './components/Search'
 import { debounce } from 'lodash-es'
 import defaultBrowserIcon from '@renderer/assets/svg/browser.svg'
+import ollamaIcon from '@renderer/assets/svg/ollama.svg'
+import { motion } from 'framer-motion'
 
 function App(): JSX.Element {
   const [searchText, setSearchText] = useState('')
@@ -14,6 +16,8 @@ function App(): JSX.Element {
     window.api.getDefaultBrowserIcon().then(setBrowserIcon)
   }, [])
 
+  const [isChatWithAi, setIsChatWithAi] = useState(false)
+
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
       if (term.trim() !== '') {
@@ -24,7 +28,18 @@ function App(): JSX.Element {
           icon: browserIcon || defaultBrowserIcon,
           action: `https://www.google.com/search?q=${encodeURIComponent(term)}`
         }
-        setSearchResults([...results, browserItem])
+        const result = [browserItem, ...results]
+
+        if (term === 'chat') {
+          const chatItem: SearchResult = {
+            type: 'chat',
+            title: 'chat to ai',
+            icon: ollamaIcon,
+            action: ''
+          }
+          result.unshift(chatItem)
+        }
+        setSearchResults(result)
         setSelectedIndex(0)
       } else {
         setSearchResults([])
@@ -34,37 +49,53 @@ function App(): JSX.Element {
   )
 
   const executeSelectedAction = useCallback(() => {
-    const selectedResult = searchResults[selectedIndex]
-    if (selectedResult) {
-      switch (selectedResult.type) {
-        case 'app':
-          window.api.execAction(selectedResult.action)
-          break;
-        case 'file':
-          window.api.openByPath(selectedResult.action)
-          break;
-        case 'search':
-          window.api.searchOnBrowser(selectedResult.action)
-          break;
+    if (isChatWithAi) {
+      console.log('chat with ai') 
+      console.log(searchText)
+    } else {
+      const selectedResult = searchResults[selectedIndex]
+      if (selectedResult) {
+        switch (selectedResult.type) {
+          case 'app':
+            window.api.execAction(selectedResult.action)
+            break
+          case 'file':
+            window.api.openByPath(selectedResult.action)
+            break
+          case 'search':
+            window.api.searchOnBrowser(selectedResult.action)
+            break
+          case 'chat':
+            setIsChatWithAi(true)
+            setSearchText('')
+            break
+        }
       }
     }
   }, [searchResults, selectedIndex])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    switch (e.key) {
-      case 'ArrowUp':
-        e.preventDefault()
-        setSelectedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : searchResults.length - 1))
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        setSelectedIndex((prevIndex) => (prevIndex < searchResults.length - 1 ? prevIndex + 1 : 0))
-        break
-      case 'Enter':
-        executeSelectedAction()
-        break
-    }
-  }, [searchResults.length, executeSelectedAction])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex((prevIndex) =>
+            prevIndex > 0 ? prevIndex - 1 : searchResults.length - 1
+          )
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex((prevIndex) =>
+            prevIndex < searchResults.length - 1 ? prevIndex + 1 : 0
+          )
+          break
+        case 'Enter':
+          executeSelectedAction()
+          break
+      }
+    },
+    [searchResults.length, executeSelectedAction]
+  )
 
   useEffect(() => {
     debouncedSearch(searchText)
@@ -87,17 +118,34 @@ function App(): JSX.Element {
 
   return (
     <div className="drag rounded-lg overflow-hidden">
-      <Search 
-        searchText={searchText} 
-        setSearchText={setSearchText} 
+      {isChatWithAi && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 400 }}
+          className="bg-white w-full"
+        >
+          11111
+        </motion.div>
+      )}
+
+      <Search
+        isChatWithAi={isChatWithAi}
+        searchText={searchText}
+        setSearchText={setSearchText}
         onKeyDown={handleKeyDown}
+        onBack={() => {
+          setIsChatWithAi(false)
+        }}
       />
-      <Content 
-        searchResults={searchResults}
-        selectedIndex={selectedIndex}
-        setSelectedIndex={setSelectedIndex}
-        executeSelectedAction={executeSelectedAction}
-      />
+
+      {!isChatWithAi && searchText !== '' && (
+        <Content
+          searchResults={searchResults}
+          selectedIndex={selectedIndex}
+          setSelectedIndex={setSelectedIndex}
+          executeSelectedAction={executeSelectedAction}
+        />
+      )}
     </div>
   )
 }
