@@ -11,10 +11,6 @@ function App(): JSX.Element {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
 
-  const [browserIcon, setBrowserIcon] = useState<string | null>('')
-  useEffect(() => {
-    window.api.getDefaultBrowserIcon().then(setBrowserIcon)
-  }, [])
 
   const [isChatWithAi, setIsChatWithAi] = useState(false)
 
@@ -25,7 +21,7 @@ function App(): JSX.Element {
         const browserItem = {
           type: 'search' as const,
           title: `open in browser: ${term}`,
-          icon: browserIcon || defaultBrowserIcon,
+          icon: defaultBrowserIcon,
           action: `https://www.google.com/search?q=${encodeURIComponent(term)}`
         }
         const result = [browserItem, ...results]
@@ -45,7 +41,7 @@ function App(): JSX.Element {
         setSearchResults([])
       }
     }, 300),
-    [browserIcon]
+    []
   )
 
   const executeSelectedAction = useCallback(() => {
