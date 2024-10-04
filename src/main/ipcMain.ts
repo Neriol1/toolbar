@@ -1,10 +1,14 @@
 import { execSync, exec } from "child_process"
-import { ipcMain, shell, app } from "electron"
+import { ipcMain, shell, app, BrowserWindow, globalShortcut } from "electron"
 import { searchAppsAndFiles } from "./search"
 
 // Handle IPC requests from renderer
 ipcMain.handle('search-on-browser', async (_, url) => {
-  return shell.openPath(url)
+  if (process.platform === 'win32') {
+    return shell.openPath(url)
+  } else {
+    return shell.openExternal(url)
+  }
 })
 
 ipcMain.handle('get-default-browser-icon', async () => {
@@ -65,4 +69,25 @@ const execAction = async (command: string) => {
 
 ipcMain.handle('exec-action', (_, command) => {
   execAction(command)
+})
+
+ipcMain.handle('hide-window', () => {
+  const mainWindow = BrowserWindow.getFocusedWindow()
+  if (mainWindow) {
+    mainWindow.hide()
+  }
+})
+
+
+app.whenReady().then(() => {
+  globalShortcut.register('Option+Space', () => {
+    const mainWindow = BrowserWindow.getFocusedWindow()
+    if (mainWindow) {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide()
+      } else {
+        mainWindow.show()
+      }
+    }
+  })
 })

@@ -88,9 +88,16 @@ function App(): JSX.Element {
         case 'Enter':
           executeSelectedAction()
           break
+        case 'Escape':
+          if (isChatWithAi) {
+            setIsChatWithAi(false)
+          } else {
+            window.api.hideWindow()
+          }
+          break
       }
     },
-    [searchResults.length, executeSelectedAction]
+    [searchResults.length, executeSelectedAction, isChatWithAi]
   )
 
   useEffect(() => {

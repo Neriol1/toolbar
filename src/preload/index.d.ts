@@ -6,6 +6,7 @@ interface Api {
   getDefaultBrowserIcon: () => Promise<string | null>;
   searchAppsAndFiles:(searchTerm: string) => Promise<SearchResult[]>;
   execAction: (command: string) => void;
+  hideWindow: () => void;
 }
 
 declare global {

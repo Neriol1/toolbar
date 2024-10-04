@@ -6,7 +6,8 @@ const api = {
   searchOnBrowser: (url: string) => ipcRenderer.invoke('search-on-browser', url),
   getDefaultBrowserIcon: () => ipcRenderer.invoke('get-default-browser-icon'),
   searchAppsAndFiles: (searchTerm: string) => ipcRenderer.invoke('search-apps-and-files', searchTerm),
-  execAction: (command: string) => ipcRenderer.invoke('exec-action', command)
+  execAction: (command: string) => ipcRenderer.invoke('exec-action', command),
+  hideWindow: () => ipcRenderer.invoke('hide-window')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
