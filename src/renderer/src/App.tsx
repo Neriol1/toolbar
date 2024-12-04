@@ -5,6 +5,8 @@ import { debounce } from 'lodash-es'
 import defaultBrowserIcon from '@renderer/assets/svg/browser.svg'
 import ollamaIcon from '@renderer/assets/svg/ollama.svg'
 import { motion } from 'framer-motion'
+import {Settings} from './components/Settings'
+import { Chat } from './components/Chat'
 
 function App(): JSX.Element {
   const [searchText, setSearchText] = useState('')
@@ -13,6 +15,7 @@ function App(): JSX.Element {
 
 
   const [isChatWithAi, setIsChatWithAi] = useState(false)
+  const [isShowSettings, setShowSettings] = useState(false)
 
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
@@ -100,6 +103,14 @@ function App(): JSX.Element {
     [searchResults.length, executeSelectedAction, isChatWithAi]
   )
 
+  const handleBack = () => {
+    if (isChatWithAi) {
+      setIsChatWithAi(false)
+    } else if (isShowSettings) {
+      setShowSettings(false)
+    }
+  }
+
   useEffect(() => {
     debouncedSearch(searchText)
     return () => {
@@ -121,24 +132,17 @@ function App(): JSX.Element {
 
   return (
     <div className="drag rounded-lg overflow-hidden">
-      {isChatWithAi && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 400 }}
-          className="bg-white w-full"
-        >
-          11111
-        </motion.div>
-      )}
+      {isShowSettings && <Settings />}
+      {isChatWithAi && <Chat /> }
 
       <Search
         isChatWithAi={isChatWithAi}
         searchText={searchText}
         setSearchText={setSearchText}
         onKeyDown={handleKeyDown}
-        onBack={() => {
-          setIsChatWithAi(false)
-        }}
+        onBack={handleBack}
+        isShowSettings={isShowSettings}
+        onSettingsClick={() => setShowSettings(true)}
       />
 
       {!isChatWithAi && searchText !== '' && (

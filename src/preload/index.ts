@@ -7,7 +7,10 @@ const api = {
   getDefaultBrowserIcon: () => ipcRenderer.invoke('get-default-browser-icon'),
   searchAppsAndFiles: (searchTerm: string) => ipcRenderer.invoke('search-apps-and-files', searchTerm),
   execAction: (command: string) => ipcRenderer.invoke('exec-action', command),
-  hideWindow: () => ipcRenderer.invoke('hide-window')
+  hideWindow: () => ipcRenderer.invoke('hide-window'),
+  getCurrentShortcut: () => ipcRenderer.invoke('get-current-shortcut'),
+  setShortcut: (shortcut: string) => ipcRenderer.invoke('set-shortcut', shortcut),
+  setShortcutEnabled: (enabled: boolean) => ipcRenderer.invoke('set-shortcut-enabled', enabled)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

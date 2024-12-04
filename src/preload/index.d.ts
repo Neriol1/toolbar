@@ -7,6 +7,9 @@ interface Api {
   searchAppsAndFiles:(searchTerm: string) => Promise<SearchResult[]>;
   execAction: (command: string) => void;
   hideWindow: () => void;
+  getCurrentShortcut: () => Promise<string>
+  setShortcut: (shortcut: string) => Promise<boolean>
+  setShortcutEnabled: (enable: boolean) => void
 }
 
 declare global {
