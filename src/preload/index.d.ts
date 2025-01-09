@@ -10,6 +10,9 @@ interface Api {
   getCurrentShortcut: () => Promise<string>
   setShortcut: (shortcut: string) => Promise<boolean>
   setShortcutEnabled: (enable: boolean) => void
+  chatWithLlm: (content: string, config: ChatConfig) => Promise<string>
+  on: (channel: 'llm-chunk', callback: (event: any, chunk: string) => void) => void
+  off: (channel: 'llm-chunk') => void
 }
 
 declare global {

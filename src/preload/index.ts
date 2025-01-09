@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { ChatConfig } from '../main/langchain'
 
 const api = {
   openByPath: (url: string) => ipcRenderer.invoke('open-by-path', url),
@@ -10,7 +11,10 @@ const api = {
   hideWindow: () => ipcRenderer.invoke('hide-window'),
   getCurrentShortcut: () => ipcRenderer.invoke('get-current-shortcut'),
   setShortcut: (shortcut: string) => ipcRenderer.invoke('set-shortcut', shortcut),
-  setShortcutEnabled: (enabled: boolean) => ipcRenderer.invoke('set-shortcut-enabled', enabled)
+  setShortcutEnabled: (enabled: boolean) => ipcRenderer.invoke('set-shortcut-enabled', enabled),
+  chatWithLlm: (content: string, config: ChatConfig) => ipcRenderer.invoke('chat-with-llm',content,config),
+  on: (channel: string, callback: (event: any, ...args: any[]) => void) => ipcRenderer.on(channel, callback),
+  off: (channel: string) => ipcRenderer.removeAllListeners(channel)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

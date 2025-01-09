@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { ShortcutSetting } from './ShortcutSetting'
+import { AiSettings } from './AiSettings'
 
 export const Settings = () => {
   return (
@@ -13,6 +14,8 @@ export const Settings = () => {
         
         <div className="space-y-4">
           <ShortcutSetting />
+          
+          <AiSettings />
 
           <section>
             <h3 className="text-base font-medium mb-2">主题设置</h3>

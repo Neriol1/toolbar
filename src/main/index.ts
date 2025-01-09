@@ -1,9 +1,21 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { getInstalledApps } from './search'
 import './ipcMain'
+import { setMainWindow } from './shortCuts/ipc'
+import path from 'path'
+import os from 'os'
+
+const reactDevToolsPath = path.join(
+  os.homedir(),
+  '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/6.0.1_0'
+)
+const reduxToolsPath = path.join(
+  os.homedir(),
+  '/Library/Application Support/Google/Chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
+)
 
 function createWindow(): void {
   // Create the browser window.
@@ -22,9 +34,12 @@ function createWindow(): void {
       contextIsolation: false
     }
   })
-  mainWindow.webContents.openDevTools()
   mainWindow.on('ready-to-show', () => {
+    setMainWindow(mainWindow)
     mainWindow.show()
+  })
+  mainWindow.on('show',()=>{
+    mainWindow.webContents.openDevTools()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -44,8 +59,12 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
+  await session.defaultSession.loadExtension(reactDevToolsPath)
+  await session.defaultSession.loadExtension(reactDevToolsPath)
+  await session.defaultSession.loadExtension(reduxToolsPath)
+
   electronApp.setAppUserModelId('com.electron')
     getInstalledApps()
   // Default open or close DevTools by F12 in development

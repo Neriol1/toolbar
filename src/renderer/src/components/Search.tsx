@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import backIcon from '@renderer/assets/svg/back.svg'
 import settingsIcon from '@renderer/assets/svg/settings.svg'
 
@@ -12,12 +12,22 @@ interface SearchProps {
   onSettingsClick: () => void
 }
 
-export const Search = ({ searchText, setSearchText, onKeyDown, isChatWithAi, onBack, onSettingsClick,isShowSettings }: SearchProps) => {
+export const Search = ({ searchText, setSearchText, onKeyDown, isChatWithAi, onBack, onSettingsClick, isShowSettings }: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [isComposing, setIsComposing] = useState(false)
 
-  useEffect(()=>{
-    inputRef.current?.focus()
-  },[isChatWithAi])
+  useEffect(() => {
+    if (!isShowSettings) {
+      inputRef.current?.focus()
+    }
+  }, [isChatWithAi, isShowSettings])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isComposing) {
+      return // 如果正在输入中文，不处理键盘事件
+    }
+    onKeyDown(e)
+  }
 
   return (
     <section className={`p-3 bg-gray-200 flex items-center border-b border-solid border-zinc-400 ${isChatWithAi && 'no-drag'}`}>
@@ -31,12 +41,15 @@ export const Search = ({ searchText, setSearchText, onKeyDown, isChatWithAi, onB
       )}
       <input
         type="text"
-        className="w-full h-8 outline-none bg-gray-200 no-drag"
-        placeholder="input search term"
+        className={`w-full h-8 outline-none bg-gray-200 no-drag ${isShowSettings ? 'cursor-not-allowed' : ''}`}
+        placeholder={isShowSettings ? '' : 'input search term'}
         value={searchText}
         ref={inputRef}
-        onChange={(e) => setSearchText(e.target.value)}
-        onKeyDown={onKeyDown}
+        onChange={(e) => !isShowSettings && setSearchText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => setIsComposing(false)}
+        disabled={isShowSettings}
       />
       <img 
         className="w-5 h-5 ml-2 cursor-pointer hover:bg-gray-300 rounded-md no-drag" 
