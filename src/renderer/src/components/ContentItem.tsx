@@ -10,7 +10,7 @@ export const ContentItem = React.forwardRef<HTMLDivElement, ContentItemProps>(
     return (
       <section 
         ref={ref}
-        className={`w-full h-14 overflow-hidden py-0 flex gap-2 items-center cursor-pointer no-drag ${isSelected ? 'bg-gray-400' : ''}`} 
+        className={`w-full h-14 rounded-md overflow-hidden py-0 flex gap-2 items-center cursor-pointer no-drag ${isSelected ? 'bg-gray-400' : ''}`} 
         onClick={onClick}
       >
         <img src={icon} alt={title} className="w-7 h-7 bg-contain" />

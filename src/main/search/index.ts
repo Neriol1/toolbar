@@ -14,17 +14,22 @@ type SearchResult = {
 
 let installedApps: FileListItem[] | MacAppType[] = []
 
-export const getInstalledApps = async ()=>{
-  if(process.platform === 'win32'){
-    installedApps = getWinInstalledApps()
-  }else{
-    installedApps =  await getMacInstalledApps() as MacAppType[]
-  }
+export const getInstalledApps = async () => {
+    if (process.platform === 'win32') {
+      installedApps = getWinInstalledApps()
+    } else {
+      installedApps = await getMacInstalledApps() as unknown as MacAppType[]
+    }
+  return installedApps
 }
 
-const searchApps = (searchTerm: string): SearchResult[] => {
+const searchApps = async (searchTerm: string): Promise<SearchResult[]> => {
   const results: SearchResult[] = []
   const v = searchTerm.toLowerCase()
+  
+  // 每次搜索前先更新应用列表
+  const newApps = await getInstalledApps()
+  
   if (process.platform === 'win32') {
     const list = installedApps as FileListItem[]
     const apps = list.filter((app) => {
@@ -43,7 +48,7 @@ const searchApps = (searchTerm: string): SearchResult[] => {
       })) as SearchResult[])
     )
   } else if (process.platform === 'darwin') {
-    const list = installedApps as MacAppType[]
+    const list = newApps as MacAppType[]
     const apps = list.filter((app) => {
       return (
         app._name.toLowerCase().includes(v)
@@ -54,7 +59,7 @@ const searchApps = (searchTerm: string): SearchResult[] => {
         type: 'app',
         title: v._name,
         icon: v.icon,
-        content: v.obtained_from === 'unknown' ? v.path : '',
+        content: v.path,
         action:`open -a ${v.path}`
       })) as SearchResult[])
     )
@@ -62,20 +67,67 @@ const searchApps = (searchTerm: string): SearchResult[] => {
   return results
 }
 
+const NOT_READ_DIRS = ['node_modules','Pictures']
+const homePath = app.getPath('home')
 
+const reduceSearchFiles = async (
+  currentPath: string,
+  searchTerm: string,
+  results: Array<{filename: string, path: string}>
+): Promise<Array<{filename: string, path: string}>> => {
+  try {
+    
+    const entries = await fs.promises.readdir(currentPath, { withFileTypes: true });
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    const processEntry = async (entry: fs.Dirent) => {
+      const fullPath = path.join(currentPath, entry.name);
+      const entryNameLower = entry.name.toLowerCase();
+      
+      if(entry.parentPath === homePath && (entry.name.startsWith('.') || entry.name === 'Library')){
+        return
+      }
+
+      if(NOT_READ_DIRS.includes(entry.name) && entry.isDirectory()){
+        return
+      }
+
+      // 先检查当前条目是否匹配
+      const isMatch = entryNameLower.includes(searchTermLower)
+
+      if (entry.isDirectory()) {
+        // 目录匹配时直接添加并停止递归
+        if (isMatch) {
+          results.push({ filename: entry.name, path: fullPath });
+          return;
+        }
+        // 未匹配时继续递归搜索
+        return reduceSearchFiles(fullPath, searchTerm, results);
+      } else if (entry.isFile() && isMatch) {
+        results.push({ filename: entry.name, path: fullPath });
+      }
+    };
+
+    await Promise.all(entries.map(processEntry));
+    return results;
+  } catch (error) {
+    console.error(`遍历目录失败: ${currentPath}`, error);
+    return results;
+  }
+};
 
 const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
+  //  'desktop','downloads', 'userData', 'documents'
   const directories = [
-    'home', 'desktop', 'downloads', 'userData', 'documents'
+      'home',
   ].map(dir => app.getPath(dir as any))
-  const allFiles = directories.reduce((pre,cur)=>{
-    const p = fs.readdirSync(cur)
-    return pre.concat(p.map(v=>({filename:v,path:path.join(cur,v)})))
-  }, [] as {filename:string,path:string}[])
+  const allFiles = [] as any[]
+  
+  for(const dir of directories){
+    await reduceSearchFiles(dir, searchTerm,allFiles)
+  }
 
-  const filterFiles = allFiles.filter(file => file.filename.toLowerCase().includes(searchTerm.toLowerCase()))
-
-  return Promise.all(filterFiles.map(async file => {
+  return Promise.all(allFiles.map(async file => {
     let icon = ''
     try {
       const iconObj = await app.getFileIcon(file.path)
@@ -95,7 +147,7 @@ const searchFiles = async (searchTerm: string): Promise<SearchResult[]> => {
 
 export const searchAppsAndFiles = async (searchTerm: string) => {
   console.log(`开始搜索: ${searchTerm}`)
-  console.log(installedApps,'--installedApps');
+  console.log(installedApps);
   
   const [appResults, fileResults] = await Promise.all([
     searchApps(searchTerm),
@@ -103,5 +155,11 @@ export const searchAppsAndFiles = async (searchTerm: string) => {
   ])
   const results = [...appResults, ...fileResults]
   console.log(`搜索完成，找到 ${results.length} 个结果`)
+  console.log(results);
+  
   return results
+}
+
+export const refreshInstalledApps = async () => {
+  return getInstalledApps()
 }
