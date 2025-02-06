@@ -1,13 +1,13 @@
 import { Ollama } from '@langchain/ollama'
 import { ChatOpenAI } from '@langchain/openai'
-import { HumanMessage } from '@langchain/core/messages'
-import { StringOutputParser } from '@langchain/core/output_parsers'
+import { WebSearchManager } from './agents/webSearch'
 
 export interface ChatConfig {
   provider: string
   modelName: string
   baseUrl: string
   apiKey?: string
+  temperature?: number;
 }
 
 export interface Message {
@@ -32,7 +32,8 @@ export const createLLM = (config: ChatConfig) => {
         }
         return new Ollama({
           baseUrl: config.baseUrl,
-          model: config.modelName
+          model: config.modelName,
+          temperature:config.temperature
         })
       case 'deepseek':
       case 'openai':
@@ -47,7 +48,8 @@ export const createLLM = (config: ChatConfig) => {
           configuration: {
             baseURL: config.baseUrl,
             apiKey: config.apiKey
-          }
+          },
+          temperature:config.temperature
         })
       default:
         throw new LLMError(`不支持的AI提供商: ${config.provider}`, 'UNSUPPORTED_PROVIDER')
@@ -60,6 +62,8 @@ export const createLLM = (config: ChatConfig) => {
   }
 }
 
+export type LLMType = ReturnType<typeof createLLM>
+
 export const chat = async (content: string, config: ChatConfig) => {
   console.log(content);
   console.log(config);
@@ -69,12 +73,17 @@ export const chat = async (content: string, config: ChatConfig) => {
       throw new LLMError('对话内容不能为空', 'EMPTY_CONTENT')
     }
 
-    const llm = createLLM(config)
-    const p = llm.pipe(new StringOutputParser())
-    
-    const stream = await p.stream([
-      new HumanMessage(content)
-    ])
+    // const llm = createLLM(config)
+    // const finalChain = llm.pipe(new StringOutputParser())
+    // const stream = await finalChain.stream([
+    //   new HumanMessage(content)
+    // ])
+    const manager = new WebSearchManager(config)
+    const chain = await manager.buildProcessingChain();
+    const stream = await chain.invoke({
+      input:content
+    })
+
     return stream
   } catch (error) {
     if (error instanceof LLMError) {
