@@ -26,6 +26,7 @@ function createWindow(): void {
     autoHideMenuBar: true,
     frame: false,
     transparent: true,
+    useContentSize: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -34,6 +35,23 @@ function createWindow(): void {
       contextIsolation: false
     }
   })
+
+  // 监听渲染进程内容大小变化
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.executeJavaScript(`
+      new ResizeObserver(() => {
+        const height = document.documentElement.offsetHeight;
+        window.electron.ipcRenderer.send('update-window-size', height);
+      }).observe(document.documentElement);
+    `);
+  });
+
+  // 处理渲染进程发来的大小更新请求
+  ipcMain.on('update-window-size', (_, height) => {
+    const [width] = mainWindow.getSize();
+    mainWindow.setSize(width, height);
+  });
+
   mainWindow.on('ready-to-show', () => {
     setMainWindow(mainWindow)
     mainWindow.show()
