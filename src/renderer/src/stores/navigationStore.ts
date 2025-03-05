@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
-export type PageType = 'search' | 'chat' | 'settings'
+export type PageType = 'search' | 'chat' | 'settings' | 'translate'
 
 interface NavigationState {
   pageStack: PageType[]

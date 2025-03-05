@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { TranslateResponse, TranslateParams } from '../main/langchain/agents/translate'
 
 interface Api {
   openByPath: (url: string) => Promise<void>;
@@ -13,6 +14,7 @@ interface Api {
   chatWithLlm: (content: string, config: ChatConfig) => Promise<string>
   on: (channel: 'llm-chunk', callback: (event: any, chunk: string) => void) => void
   off: (channel: 'llm-chunk') => void
+  translate: (text: TranslateParams, config: ChatConfig) => TranslateResponse
 }
 
 declare global {

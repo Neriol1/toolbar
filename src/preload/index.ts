@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { ChatConfig } from '../main/langchain'
+import { TranslateParams } from '../main/langchain/agents/translate'
 
 const api = {
   openByPath: (url: string) => ipcRenderer.invoke('open-by-path', url),
@@ -14,7 +15,8 @@ const api = {
   setShortcutEnabled: (enabled: boolean) => ipcRenderer.invoke('set-shortcut-enabled', enabled),
   chatWithLlm: (content: string, config: ChatConfig) => ipcRenderer.invoke('chat-with-llm',content,config),
   on: (channel: string, callback: (event: any, ...args: any[]) => void) => ipcRenderer.on(channel, callback),
-  off: (channel: string) => ipcRenderer.removeAllListeners(channel)
+  off: (channel: string) => ipcRenderer.removeAllListeners(channel),
+  translate: (text: TranslateParams, config: ChatConfig) => ipcRenderer.invoke('translate',text,config)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

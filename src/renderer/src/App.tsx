@@ -3,12 +3,15 @@ import { Content } from './components/Content'
 import { Search } from './components/Search'
 import { debounce } from 'lodash-es'
 import defaultBrowserIcon from '@renderer/assets/svg/browser.svg'
+import translateIcon from '@renderer/assets/svg/translate.svg'
 import ollamaIcon from '@renderer/assets/svg/ollama.svg'
 import {Settings} from './components/Settings'
 import { Chat } from './components/Chat'
 import { useAiStore } from '@renderer/stores/aiStore'
 import { useChatStore } from './stores/chatStore'
 import { useNavigationStore } from './stores/navigationStore'
+import { Translate } from './components/Translate'
+import { useTranslateStore } from './stores/translateStore'
 
 function App(): JSX.Element {
   const [searchText, setSearchText] = useState('')
@@ -19,11 +22,15 @@ function App(): JSX.Element {
 
   const [isChatWithAi, setIsChatWithAi] = useState(false)
   const [isShowSettings, setShowSettings] = useState(false)
+  const [isTranslate, setIsTranslate] = useState(false)
+  const {setInput} = useTranslateStore.getState()
+
 
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
       if (term.trim() !== '') {
-        const results = await window.api.searchAppsAndFiles(term.trim())
+        // const results = await window.api.searchAppsAndFiles(term.trim())
+        const results = [] as any
         const browserItem = {
           type: 'search' as const,
           title: `open in browser: ${term}`,
@@ -32,7 +39,7 @@ function App(): JSX.Element {
         }
         const result = [browserItem, ...results]
 
-        if (term === 'chat') {
+        if ('chat'.includes(term)) {
           const chatItem: SearchResult = {
             type: 'chat',
             title: 'chat to ai',
@@ -40,6 +47,15 @@ function App(): JSX.Element {
             action: ''
           }
           result.unshift(chatItem)
+        }
+        if('translate'.includes(term)) {
+          const translateItem: SearchResult = {
+            type: 'translate',
+            title: 'Translate',
+            icon: translateIcon,
+            action: ''
+          }
+          result.unshift(translateItem)
         }
         setSearchResults(result)
         setSelectedIndex(0)
@@ -92,6 +108,9 @@ function App(): JSX.Element {
         setLoading(false)
         updateLastMessage('与 AI 服务器通信时发生错误，请检查网络连接')
       }
+    } else if(currentPage === 'translate'){
+      if (!searchText.trim()) return
+      setInput(searchText)
     } else {
       const selectedResult = searchResults[selectedIndex]
       if (selectedResult) {
@@ -107,6 +126,10 @@ function App(): JSX.Element {
             break
           case 'chat':
             handleChatStart()
+            setSearchText('')
+            break
+          case 'translate':
+            handleTranslateStart()
             setSearchText('')
             break
         }
@@ -133,28 +156,34 @@ function App(): JSX.Element {
           executeSelectedAction()
           break
         case 'Escape':
-          if (isChatWithAi) {
-            setIsChatWithAi(false)
-          } else {
-            window.api.hideWindow()
-          }
+          handleBack()
           break
       }
     },
-    [searchResults.length, executeSelectedAction, isChatWithAi]
+    [searchResults.length, executeSelectedAction]
   )
 
   const handleBack = () => {
     const previousPage = popPage()
-    if (!previousPage) return
+    if (!previousPage){
+      window.api.hideWindow()
+      return
+    }
 
     switch (previousPage) {
       case 'search':
         setIsChatWithAi(false)
+        setIsTranslate(false)
         setShowSettings(false)
         break
       case 'chat':
         setIsChatWithAi(true)
+        setIsTranslate(false)
+        setShowSettings(false)
+        break
+      case 'translate':
+        setIsChatWithAi(false)
+        setIsTranslate(true)
         setShowSettings(false)
         break
       case 'settings':
@@ -173,15 +202,20 @@ function App(): JSX.Element {
     setIsChatWithAi(true)
   }
 
+  const handleTranslateStart = ()=>{
+    pushPage('translate')
+    setIsTranslate(true)
+  }
+
   useEffect(() => {
-    if(isChatWithAi){
+    if(isChatWithAi || isTranslate ){
       return
     }
     debouncedSearch(searchText)
     return () => {
       debouncedSearch.cancel()
     }
-  }, [searchText, debouncedSearch,isChatWithAi])
+  }, [searchText, debouncedSearch,isChatWithAi,isTranslate])
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -201,6 +235,7 @@ function App(): JSX.Element {
 
       {currentPage === 'settings' && <Settings />}
       {currentPage === 'chat' && <Chat />}
+      {currentPage === 'translate' && <Translate />}
       
       <Search
         isChatWithAi={currentPage === 'chat'}
@@ -210,6 +245,7 @@ function App(): JSX.Element {
         onBack={handleBack}
         isShowSettings={currentPage === 'settings'}
         onSettingsClick={handleSettingsClick}
+        isTranslate={currentPage === 'translate'}
       />
 
       {currentPage === 'search' && searchText !== '' && (
