@@ -29,8 +29,7 @@ function App(): JSX.Element {
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
       if (term.trim() !== '') {
-        // const results = await window.api.searchAppsAndFiles(term.trim())
-        const results = [] as any
+        const results = await window.api.searchAppsAndFiles(term.trim())
         const browserItem = {
           type: 'search' as const,
           title: `open in browser: ${term}`,

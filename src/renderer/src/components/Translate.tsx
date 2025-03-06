@@ -1,7 +1,6 @@
 import { useTranslateStore } from '@renderer/stores/translateStore'
 import { motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-// import { Button } from './ui/button'
 
 const Word = ({meanings}: Pick<TranslateWord, 'meanings'>) => {
   return (
@@ -75,8 +74,12 @@ export const Translate = () => {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalInput(e.target.value)
-    clearCurrentResponse()
+    // 如果输入只是一个换行符（回车键造成的），并且之前没有内容，则忽略
+    if (e.target.value === '\n' && localInput === '') {
+      return;
+    }
+    setLocalInput(e.target.value);
+    clearCurrentResponse();
   }
 
   const renderResult = () => {

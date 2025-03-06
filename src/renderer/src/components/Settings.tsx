@@ -17,13 +17,6 @@ export const Settings = () => {
           
           <AiSettings />
 
-          <section>
-            <h3 className="text-base font-medium mb-2">主题设置</h3>
-            <select className="w-full p-2 border rounded">
-              <option value="light">浅色主题</option>
-              <option value="dark">深色主题</option>
-            </select>
-          </section>
         </div>
       </div>
     </motion.div>
