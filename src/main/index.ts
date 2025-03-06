@@ -5,17 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { getInstalledApps } from './search'
 import './ipcMain'
 import { setMainWindow } from './shortCuts/ipc'
-import path from 'path'
-import os from 'os'
-
-const reactDevToolsPath = path.join(
-  os.homedir(),
-  '/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/6.0.1_0'
-)
-const reduxToolsPath = path.join(
-  os.homedir(),
-  '/Library/Application Support/Google/Chrome/Default/Extensions/lmhkpmbekcpmknklioeibfkpmmfibljd/3.2.7_0'
-)
+import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer'
 
 function createWindow(): void {
   // Create the browser window.
@@ -56,7 +46,7 @@ function createWindow(): void {
     setMainWindow(mainWindow)
     mainWindow.show()
   })
-  mainWindow.on('show',()=>{
+  mainWindow.on('show', () => {
     if (is.dev) {
       mainWindow.webContents.openDevTools()
     }
@@ -80,13 +70,21 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
-  // Set app user model id for windows
-  // await session.defaultSession.loadExtension(reactDevToolsPath)
-  // await session.defaultSession.loadExtension(reactDevToolsPath)
-  // await session.defaultSession.loadExtension(reduxToolsPath)
+  // 在开发模式下加载开发工具扩展
+  if (is.dev) {
+    try {
+      const reactDevTools = await installExtension(REACT_DEVELOPER_TOOLS)
+      console.log(`React DevTools 安装成功: ${reactDevTools}`)
+      
+      const reduxDevTools = await installExtension(REDUX_DEVTOOLS)
+      console.log(`Redux DevTools 安装成功: ${reduxDevTools}`)
+    } catch (e) {
+      console.error('DevTools 扩展安装失败:', e)
+    }
+  }
 
   electronApp.setAppUserModelId('com.electron')
-    getInstalledApps()
+  getInstalledApps()
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
