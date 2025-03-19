@@ -1,21 +1,13 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { ContentItem } from './ContentItem'
+import { useEnter } from '../hooks/useEnter'
+import { useSearchStore } from '../stores/searchStore'
 
-interface ContentProps {
-  searchResults: SearchResult[]
-  selectedIndex: number
-  setSelectedIndex: (index: number) => void
-  executeSelectedAction: () => void
-}
-
-export const Content = ({
-  searchResults,
-  selectedIndex,
-  setSelectedIndex,
-  executeSelectedAction
-}: ContentProps) => {
+export const Content = () => {
   const contentRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  const { enter } = useEnter()
+  const { searchResults, selectedIndex, setSelectedIndex } = useSearchStore()
 
   const scrollToSelectedItem = useCallback(() => {
     const container = contentRef.current
@@ -32,6 +24,11 @@ export const Content = ({
     }
   }, [selectedIndex])
 
+  const onClick = (index: number) => {
+    setSelectedIndex(index)
+    enter()
+  }
+
   useEffect(() => {
     scrollToSelectedItem()
   }, [scrollToSelectedItem])
@@ -44,10 +41,7 @@ export const Content = ({
           ref={(el) => (itemRefs.current[index] = el)}
           {...result}
           isSelected={index === selectedIndex}
-          onClick={() => {
-            setSelectedIndex(index)
-            executeSelectedAction()
-          }}
+          onClick={() => onClick(index)}
         />
       ))}
     </main>

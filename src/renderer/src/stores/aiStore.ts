@@ -14,11 +14,13 @@ interface AiState {
   setCurrentBaseUrl: (baseUrl: string) => void
   setCurrentApiKey: (apiKey: string) => void
   updateProviderConfig: (provider: AiProvider, config: Partial<AiProviderConfig>) => void
+  getChatConfig: () => ChatConfig
+  validateLLMCanUse: () => boolean
 }
 
 export const useAiStore = create<AiState>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       providers: getProvidersStorage(),
       currentProvider: localStorage.getItem('aiProvider') as AiProvider || 'ollama',
       currentModel: localStorage.getItem('aiModelName') || AIPROVIDERS.ollama.defaultModel,
@@ -66,6 +68,24 @@ export const useAiStore = create<AiState>()(
           false,
           'updateProviderConfig'
         )
+      },
+      
+      getChatConfig: () => {
+        const { currentProvider, currentModel, currentBaseUrl, currentApiKey } = get()
+        return {
+          provider: currentProvider,
+          modelName: currentModel,
+          baseUrl: currentBaseUrl,
+          apiKey: currentApiKey
+        }
+      },
+
+      validateLLMCanUse: () => {
+        const { currentProvider, currentApiKey } = get()
+        if (AIPROVIDERS[currentProvider].needApiKey && !currentApiKey) {
+          return false
+        }
+        return true
       }
     }),
     {

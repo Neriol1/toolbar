@@ -5,7 +5,7 @@ interface SearchResult {
   title: string
   content?: string
   icon?: string
-  action: string
+  action: string | Function
 }
 type AiProvider = 'openai' | 'deepseek' | 'ollama'
 
